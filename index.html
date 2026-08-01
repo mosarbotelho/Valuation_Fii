@@ -26,7 +26,12 @@
     <header class="border-b border-slate-700 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
         <h1 class="text-2xl md:text-3xl font-bold text-cyan-400">📊 Valuation de FIIs</h1>
-        <p class="text-slate-400 text-sm mt-1">Precificação do valor teto de Fiis (by Mosar Faria Botelho)</p>
+        <p class="text-slate-400 text-xs md:text-sm mt-1">
+          Precificação de valor teto dos FIIs considerando o risco pessoal
+        </p>
+        <p class="text-slate-500 text-xs italic mt-0.5">
+          Aplicativo idealizado por <span class="text-slate-400 font-medium">Mosar Faria Botelho</span>
+        </p>
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
@@ -39,6 +44,17 @@
         <input type="file" id="inputCarregarFile" accept=".json" class="hidden" onchange="carregarArquivoCarteira(event)">
       </div>
     </header>
+
+    <!-- RESUMO DO APLICATIVO -->
+    <section class="bg-gradient-to-r from-slate-800 via-slate-800/90 to-slate-800 p-4 md:p-5 rounded-xl border border-cyan-500/30 shadow-lg space-y-2">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-chart-line text-cyan-400"></i>
+        <h2 class="text-sm font-bold text-cyan-300 uppercase tracking-wider">Sobre este Aplicativo</h2>
+      </div>
+      <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+        Esta ferramenta foi desenvolvida para calcular o <strong>Preço Teto</strong> e a <strong>Margem de Segurança</strong> de Fundos Imobiliários (FIIs, FI-Infra e Fiagros) utilizando o modelo de DDM (Discounted Dividend Model). Ela ajusta as taxas de exigência comparando FIIs de Tijolo ao <strong>IPCA</strong> e FIIs de Papel ao <strong>CDI</strong> (ambos descontando 15% de IR equivalente), somados ao prêmio de risco do segmento e perfil de risco pessoal. O sistema salva seu trabalho na memória do navegador e atualiza as cotações em tempo real.
+      </p>
+    </section>
 
     <!-- PAINEL UNIFICADO: CONCEITOS & FÓRMULAS -->
     <section class="bg-slate-800/80 rounded-xl border border-slate-700 overflow-hidden shadow-xl">
@@ -193,7 +209,7 @@
             </div>
             <div class="w-28 flex-shrink-0">
               <label class="block text-[10px] text-slate-400 uppercase font-semibold">Prêmio (%)</label>
-              <input type="number" id="premioTijoloGlobal" value="2.50" step="0.25" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-cyan-400 font-bold text-sm focus:outline-none focus:border-cyan-500">
+              <input type="number" id="premioTijoloGlobal" value="2.50" step="0.25" oninput="salvarEstadoLocal()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-cyan-400 font-bold text-sm focus:outline-none focus:border-cyan-500">
             </div>
             <button onclick="aplicarPremioTijolo()" title="Aplicar aos FIIs de Tijolo" class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-1.5 px-3 rounded text-xs transition duration-200 flex items-center justify-center gap-1.5 h-[34px]">
               <i class="fa-solid fa-shield-halved"></i> <span>Aplicar Prêmio</span>
@@ -216,7 +232,7 @@
             </div>
             <div class="w-28 flex-shrink-0">
               <label class="block text-[10px] text-slate-400 uppercase font-semibold">Prêmio (%)</label>
-              <input type="number" id="premioPapelGlobal" value="2.00" step="0.25" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500">
+              <input type="number" id="premioPapelGlobal" value="2.00" step="0.25" oninput="salvarEstadoLocal()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500">
             </div>
             <button onclick="aplicarPremioPapel()" title="Aplicar aos FIIs de Papel" class="flex-1 bg-amber-700 hover:bg-amber-600 text-white font-bold py-1.5 px-3 rounded text-xs transition duration-200 flex items-center justify-center gap-1.5 h-[34px]">
               <i class="fa-solid fa-shield-halved"></i> <span>Aplicar Prêmio</span>
@@ -361,7 +377,7 @@
       <div>
         <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Nome do Arquivo</label>
         <div class="flex items-center gap-1">
-          <input type="text" id="nomeArquivoSalvar" value="carteira-fii-mosar" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-semibold focus:outline-none focus:border-emerald-500">
+          <input type="text" id="nomeArquivoSalvar" value="carteira-fii" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-semibold focus:outline-none focus:border-emerald-500">
           <span class="text-slate-400 text-xs font-mono">.json</span>
         </div>
       </div>
@@ -372,7 +388,7 @@
   </div>
 
   <script>
-    let fiis = [
+    let fiisPadrao = [
       { ticker: 'GGRC11', segmento: 'Logístico / Galpões AAA', tipo: 'tijolo', risco: 'Baixo', variacaoRisco: '+1,50% a +2,00%', cotacao: 9.89, rendimento: 0.10, juro: 8.00, premio: 2.00 },
       { ticker: 'TVRI11', segmento: 'Agências Bancárias', tipo: 'tijolo', risco: 'Médio', variacaoRisco: '+2,50% a +3,00%', cotacao: 91.36, rendimento: 1.05, juro: 8.00, premio: 2.75 },
       { ticker: 'GARE11', segmento: 'Renda Urbana / Varejo Essencial', tipo: 'tijolo', risco: 'Baixo', variacaoRisco: '+1,50% a +2,00%', cotacao: 8.17, rendimento: 0.08, juro: 8.00, premio: 2.00 },
@@ -390,8 +406,45 @@
       { ticker: 'CPTI11', segmento: 'Infraestrutura Papel (Debêntures)', tipo: 'papel', risco: 'Médio', variacaoRisco: '+2,00% a +3,00%', cotacao: 86.65, rendimento: 1.10, juro: 14.25, premio: 2.25 }
     ];
 
+    let fiis = [];
     let ativoEmEdicao = null;
     const TOKEN_BRAPI = "gMSJqXa15Gq86sfF57JEoo"; 
+
+    // --- FUNÇÕES DE ARMAZENAMENTO LOCAL (LOCALSTORAGE) ---
+    function salvarEstadoLocal() {
+      const estado = {
+        parametrosMacro: {
+          ipcaGlobal: parseFloat(document.getElementById('taxaIpcaGlobal').value) || 0,
+          premioTijolo: parseFloat(document.getElementById('premioTijoloGlobal').value) || 0,
+          cdiGlobal: parseFloat(document.getElementById('taxaCdiGlobal').value) || 0,
+          premioPapel: parseFloat(document.getElementById('premioPapelGlobal').value) || 0
+        },
+        fiis: fiis
+      };
+      localStorage.setItem('fiiValuationState', JSON.stringify(estado));
+    }
+
+    function carregarEstadoLocal() {
+      const salvo = localStorage.getItem('fiiValuationState');
+      if (salvo) {
+        try {
+          const estado = JSON.parse(salvo);
+          if (estado.parametrosMacro) {
+            document.getElementById('taxaIpcaGlobal').value = estado.parametrosMacro.ipcaGlobal ?? 8.00;
+            document.getElementById('premioTijoloGlobal').value = estado.parametrosMacro.premioTijolo ?? 2.50;
+            document.getElementById('taxaCdiGlobal').value = estado.parametrosMacro.cdiGlobal ?? 14.25;
+            document.getElementById('premioPapelGlobal').value = estado.parametrosMacro.premioPapel ?? 2.00;
+          }
+          if (Array.isArray(estado.fiis) && estado.fiis.length > 0) {
+            fiis = estado.fiis;
+            return;
+          }
+        } catch(e) {
+          console.warn("Falha ao restaurar memória local, utilizando dados padrão.");
+        }
+      }
+      fiis = [...fiisPadrao];
+    }
 
     async function buscarCotacoesWeb() {
       if (fiis.length === 0) {
@@ -632,6 +685,8 @@
           </tr>
         `;
       });
+
+      salvarEstadoLocal();
     }
 
     function abrirModalAjuste(index) {
@@ -714,7 +769,7 @@
     function fecharModalSalvar() { document.getElementById('modalSalvar').classList.add('hidden'); }
 
     function executarDownloadArquivo() {
-      let nomeArq = document.getElementById('nomeArquivoSalvar').value.trim() || "carteira-fii-mosar";
+      let nomeArq = document.getElementById('nomeArquivoSalvar').value.trim() || "carteira-fii";
       if (!nomeArq.endsWith('.json')) nomeArq += '.json';
 
       const backupData = {
@@ -768,6 +823,14 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+      carregarEstadoLocal();
+      
+      const ipca = parseFloat(document.getElementById('taxaIpcaGlobal').value) || 0;
+      document.getElementById('labelIpcaLiq').innerText = `IPCA Líq: ${(ipca * 0.85).toFixed(2)}% (Bruto -15%)`;
+      
+      const cdi = parseFloat(document.getElementById('taxaCdiGlobal').value) || 0;
+      document.getElementById('labelCdiLiq').innerText = `CDI Líq: ${(cdi * 0.85).toFixed(2)}% (Bruto -15%)`;
+
       renderizarTabela();
     });
   </script>
