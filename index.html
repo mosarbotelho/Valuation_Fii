@@ -6,18 +6,29 @@
   <title>Valuation de FIIs — Sr. Mosar</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .has-tooltip { position: relative; }
+    .tooltip-content {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+    }
+    .has-tooltip:hover .tooltip-content {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
   <div class="max-w-6xl mx-auto space-y-6">
     
-    <!-- Cabeçalho com Ações de Arquivo -->
+    <!-- Cabeçalho -->
     <header class="border-b border-slate-700 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
         <h1 class="text-2xl md:text-3xl font-bold text-cyan-400">📊 Valuation de FIIs — Multi-Risco</h1>
-        <p class="text-slate-400 text-sm mt-1">Gerenciamento dinâmico, backup de arquivos e parâmetros por classe</p>
+        <p class="text-slate-400 text-sm mt-1">Gerenciamento dinâmico, matriz de risco e taxas bases líquidas de IR (15%)</p>
       </div>
 
-      <!-- Botões de Backup / Arquivos -->
       <div class="flex flex-wrap items-center gap-2">
         <button onclick="abrirModalSalvar()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-3 rounded-lg text-xs transition duration-200 flex items-center gap-1.5 shadow">
           <i class="fa-solid fa-floppy-disk"></i> Salvar Carteira
@@ -29,146 +40,195 @@
       </div>
     </header>
 
-    <!-- PAINEL DIDÁTICO: Fórmulas e Prêmios de Risco Recomendados -->
+    <!-- PAINEL UNIFICADO: CONCEITOS & FÓRMULAS (COM OPÇÃO DE OCULTAR) -->
+    <section class="bg-slate-800/80 rounded-xl border border-slate-700 overflow-hidden shadow-xl">
+      <button onclick="togglePainelConceito()" class="w-full p-4 bg-slate-800 hover:bg-slate-750 flex justify-between items-center text-left transition border-b border-slate-700/60">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-circle-info text-cyan-400 text-lg"></i>
+          <span class="font-bold text-slate-200 text-sm md:text-base">Fundamentos do Modelo & Fórmulas de Cálculo</span>
+        </div>
+        <span id="iconeConceito" class="text-slate-400 text-xs flex items-center gap-1">
+          <i class="fa-solid fa-chevron-up"></i> <span>Ocultar Painel</span>
+        </span>
+      </button>
+
+      <div id="conteudoConceito" class="p-5 md:p-6 space-y-6">
+        <!-- 1. Explicação Tijolo vs Papel -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Tijolo -->
+          <div class="bg-slate-900/70 border border-slate-700 p-4 rounded-xl space-y-2">
+            <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+              <span class="font-bold text-xs md:text-sm text-cyan-400 uppercase flex items-center gap-2">
+                🏢 FIIs de Tijolo / Reais
+              </span>
+              <span class="text-[10px] bg-cyan-950 text-cyan-300 font-mono px-2 py-0.5 rounded border border-cyan-800">
+                Benchmark: IPCA+ Líquido (-15% IR)
+              </span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Protegem contra inflação através dos reajustes de aluguéis. Para comparar com o Tesouro IPCA+, desconta-se 15% de IR da taxa base.
+            </p>
+          </div>
+
+          <!-- Papel -->
+          <div class="bg-slate-900/70 border border-slate-700 p-4 rounded-xl space-y-2">
+            <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+              <span class="font-bold text-xs md:text-sm text-amber-400 uppercase flex items-center gap-2">
+                📜 FIIs de Papel / CRIs
+              </span>
+              <span class="text-[10px] bg-amber-950 text-amber-300 font-mono px-2 py-0.5 rounded border border-amber-800">
+                Benchmark: Selic Líquida (-15% IR)
+              </span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              São títulos de dívida imobiliária. Para equiparar com ativos isentos, desconta-se 15% de IR da Selic/CDI base.
+            </p>
+          </div>
+        </div>
+
+        <!-- 2. Fórmulas -->
+        <div class="bg-[#0b1220] border border-slate-700/80 rounded-xl p-4 md:p-5 space-y-3">
+          <div class="flex items-center gap-2 border-b border-slate-700/60 pb-2.5">
+            <i class="fa-solid fa-calculator text-cyan-400 text-sm"></i>
+            <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider">A FÓRMULA DO PREÇO TETO NO SISTEMA</h3>
+          </div>
+
+          <div class="space-y-3 font-mono text-xs md:text-sm pt-1">
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-2 border-b border-slate-800/80 gap-1 md:gap-4">
+              <span class="font-sans font-semibold text-slate-300">1. Taxa Base Líquida (IR 15%):</span>
+              <span class="text-cyan-400 font-bold">Taxa Base Líquida = Taxa Bruta × 0,85</span>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-2 border-b border-slate-800/80 gap-1 md:gap-4">
+              <span class="font-sans font-semibold text-slate-300">2. Taxa Efetiva de Exigência:</span>
+              <span class="text-amber-400 font-bold">Exigência Total = Taxa Base Líquida + Prêmio de Risco</span>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-2 border-b border-slate-800/80 gap-1 md:gap-4">
+              <span class="font-sans font-semibold text-slate-300">3. Preço Teto do FII (R$):</span>
+              <span class="text-emerald-400 font-bold">Preço Teto = (Provento Mensal × 12) ÷ Exigência Total</span>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-1 md:gap-4">
+              <span class="font-sans font-semibold text-slate-300">4. Margem de Segurança (%):</span>
+              <span class="text-orange-400 font-bold">Margem = [(Preço Teto - Cotação Atual) ÷ Cotação Atual] × 100</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GUIA DIDÁTICO DE RISCO (OCULTÁVEL) -->
     <section class="bg-slate-800/80 rounded-xl border border-slate-700 overflow-hidden shadow-lg transition-all">
       <button onclick="toggleDidatico()" class="w-full p-4 bg-slate-800 hover:bg-slate-750 flex justify-between items-center text-left transition border-b border-slate-700/60">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-graduation-cap text-cyan-400 text-lg"></i>
-          <span class="font-bold text-slate-200 text-sm md:text-base">Como funciona a Matemática do Valuation & Taxas Recomendadas</span>
+          <span class="font-bold text-slate-200 text-sm md:text-base">Guia de Risco por Segmento & Faixas de Variação</span>
         </div>
-        <span id="iconeDidatico" class="text-slate-400 text-xs"><i class="fa-solid fa-chevron-up"></i> Ocultar Guia</span>
+        <span id="iconeDidatico" class="text-slate-400 text-xs flex items-center gap-1">
+          <i class="fa-solid fa-chevron-up"></i> <span>Ocultar Guia</span>
+        </span>
       </button>
 
       <div id="conteudoDidatico" class="p-5 space-y-6">
-        <!-- Tabela de Prêmios Recomendados -->
         <div>
           <h3 class="text-xs font-extrabold uppercase tracking-wider text-cyan-300 mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-shield-halved"></i> Prêmios de Risco Recomendados por Categoria
+            <i class="fa-solid fa-shield-halved"></i> Matriz de Riscos Recomendados
           </h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <!-- Bloco Tijolo -->
-            <div class="bg-slate-900/80 p-3.5 rounded-lg border border-cyan-900/50 space-y-2">
-              <div class="font-bold text-cyan-400 flex justify-between">
-                <span>🏢 FIIs de Tijolo / Reais</span>
-                <span class="text-slate-400">Benchmark: IPCA+</span>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div class="bg-emerald-950/30 p-3.5 rounded-lg border border-emerald-800/50 space-y-1.5">
+              <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-circle text-[10px]"></i> Risco Baixo (+1,00% a +2,00%)
               </div>
-              <p class="text-slate-300 leading-relaxed">
-                Protegem contra inflação através dos reajustes de aluguéis. Exigem um prêmio de risco menor sobre o Tesouro Direto.
+              <p class="text-slate-300 leading-relaxed text-[11px]">
+                Logística, Renda Urbana / Essencial e CRIs High Grade. Receita previsível, volatilidade controlada.
               </p>
-              <ul class="space-y-1 text-slate-400 pt-1">
-                <li>• <strong class="text-slate-200">Logística / Varejo Premium:</strong> Prêmio de <span class="text-emerald-400 font-bold">+1,50% a +2,50%</span></li>
-                <li>• <strong class="text-slate-200">Shoppings / Lajes A+:</strong> Prêmio de <span class="text-emerald-400 font-bold">+2,00% a +2,50%</span></li>
-                <li>• <strong class="text-slate-200">Agências / Desenvolvimentos:</strong> Prêmio de <span class="text-amber-400 font-bold">+3,00% a +4,00%</span></li>
-              </ul>
             </div>
 
-            <!-- Bloco Papel -->
-            <div class="bg-slate-900/80 p-3.5 rounded-lg border border-amber-900/50 space-y-2">
-              <div class="font-bold text-amber-400 flex justify-between">
-                <span>📜 FIIs de Papel / CRIs</span>
-                <span class="text-slate-400">Benchmark: Selic Líquida (-15% IR)</span>
+            <div class="bg-amber-950/30 p-3.5 rounded-lg border border-amber-800/50 space-y-1.5">
+              <div class="font-bold text-amber-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-circle text-[10px]"></i> Risco Médio (+2,00% a +3,50%)
               </div>
-              <p class="text-slate-300 leading-relaxed">
-                São títulos de dívida imobiliária. Para equiparar com ativos isentos, desconta-se 15% de IR da Selic/CDI base.
+              <p class="text-slate-300 leading-relaxed text-[11px]">
+                Shoppings, Lajes Corporativas, Agências e FoFs. Sensíveis a ciclos econômicos e vacância.
               </p>
-              <ul class="space-y-1 text-slate-400 pt-1">
-                <li>• <strong class="text-slate-200">CRIs High Grade (Baixo Risco):</strong> Prêmio de <span class="text-emerald-400 font-bold">+1,00% a +2,00%</span></li>
-                <li>• <strong class="text-slate-200">CRIs Middle Risk (Médio Risco):</strong> Prêmio de <span class="text-amber-400 font-bold">+2,00% a +3,00%</span></li>
-                <li>• <strong class="text-slate-200">CRIs High Yield (Alto Risco):</strong> Prêmio de <span class="text-rose-400 font-bold">+3,50% a +5,00%</span></li>
-              </ul>
             </div>
-          </div>
-        </div>
 
-        <!-- Demonstração da Equação Matemática -->
-        <div class="border-t border-slate-700/60 pt-4">
-          <h3 class="text-xs font-extrabold uppercase tracking-wider text-cyan-300 mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-calculator"></i> A Fórmula do Preço Teto no Sistema
-          </h3>
-          <div class="bg-slate-900/90 p-4 rounded-lg border border-slate-700 text-xs font-mono space-y-3">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-slate-800">
-              <span class="text-slate-300 font-sans font-bold">1. Base Papel Líquida de IR (15%):</span>
-              <span class="text-cyan-400 font-bold font-mono">Taxa Base = Taxa Selic Bruta × 0,85</span>
-            </div>
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-slate-800">
-              <span class="text-slate-300 font-sans font-bold">2. Preço Teto do FII (R$):</span>
-              <span class="text-emerald-400 font-bold font-mono">Preço Teto = (Provento Mensal × 12) ÷ (Base Líquida + Prêmio)</span>
-            </div>
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <span class="text-slate-300 font-sans font-bold">3. Margem de Segurança (%):</span>
-              <span class="text-amber-400 font-bold font-mono">Margem = [(Preço Teto - Cotação Atual) ÷ Cotação Atual] × 100</span>
+            <div class="bg-rose-950/30 p-3.5 rounded-lg border border-rose-800/50 space-y-1.5">
+              <div class="font-bold text-rose-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-circle text-[10px]"></i> Risco Alto (+3,50% a +5,00%)
+              </div>
+              <p class="text-slate-300 leading-relaxed text-[11px]">
+                CRIs High Yield, Desenvolvimento e Hotéis. Exigem maior margem devido ao risco de calote ou obra.
+              </p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Parâmetros Globais de Atalho -->
+    <!-- Parâmetros Globais -->
     <section class="bg-slate-800 p-6 rounded-xl border border-slate-700 space-y-4 shadow-lg">
       <div class="flex justify-between items-center border-b border-slate-700 pb-2">
         <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider"><i class="fa-solid fa-gears text-cyan-400 mr-2"></i> Parâmetros Macro do Mercado</h2>
-        <span id="statusApi" class="text-xs text-amber-400 italic">Buscando IPCA+...</span>
+        <span class="text-xs text-slate-400 italic">Alterar a taxa base atualiza todos os FIIs do segmento automaticamente</span>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Bloco FIIs de TIJOLO (IPCA+) -->
+        <!-- Tijolo -->
         <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700 space-y-3">
           <div class="flex justify-between items-center">
-            <span class="text-xs font-bold text-cyan-300 uppercase">🏢 FIIs de Tijolo / Híbridos</span>
-            <span class="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded border border-cyan-800">Base IPCA+</span>
+            <span class="text-xs font-bold text-cyan-300 uppercase">🏢 FIIs de Tijolo / Reais</span>
+            <span id="labelIpcaLiq" class="text-[10px] bg-cyan-950 text-cyan-300 px-2 py-0.5 rounded border border-cyan-800 font-mono">
+              IPCA Líq: 5.31% (Bruto -15%)
+            </span>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[10px] text-slate-400 uppercase font-semibold">IPCA+ (Tesouro %)</label>
-              <input type="number" id="taxaIpcaGlobal" value="6.25" step="0.05" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-cyan-400 font-bold text-sm focus:outline-none focus:border-cyan-500" oninput="atualizarTodosGlobais()">
+              <label class="block text-[10px] text-slate-400 uppercase font-semibold">IPCA+ Bruto (%)</label>
+              <input type="number" id="taxaIpcaGlobal" value="6.25" step="0.05" oninput="atualizarTaxaBaseTijolo()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-cyan-400 font-bold text-sm focus:outline-none focus:border-cyan-500">
             </div>
             <div>
               <label class="block text-[10px] text-slate-400 uppercase font-semibold">Prêmio Tijolo (%)</label>
-              <input type="number" id="premioTijoloGlobal" value="2.50" step="0.25" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-cyan-400 font-bold text-sm focus:outline-none focus:border-cyan-500" oninput="atualizarTodosGlobais()">
+              <input type="number" id="premioTijoloGlobal" value="2.50" step="0.25" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-cyan-400 font-bold text-sm focus:outline-none focus:border-cyan-500">
             </div>
           </div>
-          <div class="text-xs text-slate-400 flex justify-between pt-1 border-t border-slate-800">
-            <span>Exigência Base Tijolo:</span>
-            <span id="taxaTotalTijolo" class="font-bold text-emerald-400">IPCA + 8.75%</span>
-          </div>
+          <button onclick="aplicarPremioTijolo()" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-1.5 rounded text-xs transition duration-200 flex items-center justify-center gap-1.5 mt-2">
+            <i class="fa-solid fa-shield-halved"></i> Aplicar Prêmio aos FIIs de Tijolo
+          </button>
         </div>
 
-        <!-- Bloco FIIs de PAPEL (Selic Líquida -15% IR) -->
+        <!-- Papel -->
         <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-700 space-y-3">
           <div class="flex justify-between items-center">
             <span class="text-xs font-bold text-amber-300 uppercase">📜 FIIs de Papel / CRIs</span>
-            <span class="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-800">Selic -15% IR</span>
+            <span id="labelCdiLiq" class="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded border border-amber-800 font-mono">
+              Selic Líq: 8.93% (Bruta -15%)
+            </span>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-[10px] text-slate-400 uppercase font-semibold">Taxa Selic Bruta (%)</label>
-              <input type="number" id="taxaCdiGlobal" value="10.50" step="0.25" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500" oninput="atualizarTodosGlobais()">
+              <input type="number" id="taxaCdiGlobal" value="10.50" step="0.25" oninput="atualizarTaxaBasePapel()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500">
             </div>
             <div>
               <label class="block text-[10px] text-slate-400 uppercase font-semibold">Prêmio Papel (%)</label>
-              <input type="number" id="premioPapelGlobal" value="2.00" step="0.25" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500" oninput="atualizarTodosGlobais()">
+              <input type="number" id="premioPapelGlobal" value="2.00" step="0.25" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-amber-400 font-bold text-sm focus:outline-none focus:border-amber-500">
             </div>
           </div>
-          <div class="text-xs text-slate-400 flex justify-between pt-1 border-t border-slate-800">
-            <span>Exigência Líquida Papel:</span>
-            <span id="taxaTotalPapel" class="font-bold text-emerald-400">8.93% + 2.00% = 10.93%</span>
-          </div>
+          <button onclick="aplicarPremioPapel()" class="w-full bg-amber-700 hover:bg-amber-600 text-white font-bold py-1.5 rounded text-xs transition duration-200 flex items-center justify-center gap-1.5 mt-2">
+            <i class="fa-solid fa-shield-halved"></i> Aplicar Prêmio aos FIIs de Papel
+          </button>
         </div>
-      </div>
-
-      <div class="flex justify-end pt-2">
-        <button onclick="buscarTaxaTesouroIpca()" class="bg-slate-700 hover:bg-slate-600 border border-slate-600 text-cyan-300 font-semibold py-1.5 px-4 rounded text-xs transition duration-200 flex items-center gap-2">
-          <i class="fa-solid fa-rotate text-xs"></i> Sincronizar Tesouro IPCA+
-        </button>
       </div>
     </section>
 
-    <!-- Tabela de Ativos da Carteira -->
+    <!-- Tabela de Ativos -->
     <section class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-xl">
       <div class="p-4 bg-slate-900/40 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h2 class="text-lg font-bold text-slate-200">Ativos em Acompanhamento</h2>
-          <span id="totalFiis" class="text-xs text-slate-400">14 FIIs Cadastrados</span>
+          <span id="totalFiis" class="text-xs text-slate-400">8 FIIs Cadastrados</span>
         </div>
         <button onclick="abrirModalNovoFii()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition duration-200 flex items-center gap-2">
           <i class="fa-solid fa-plus"></i> Adicionar Novo FII
@@ -179,10 +239,11 @@
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="bg-slate-900/80 text-slate-400 text-xs uppercase border-b border-slate-700">
-              <th class="p-4">FII / Segmento / Risco Recomendado</th>
+              <th class="p-4">FII / Segmento</th>
+              <th class="p-4">Perfil de Risco</th>
               <th class="p-4">Cotação</th>
-              <th class="p-4">Provento Recente</th>
-              <th class="p-4">Modelo / Exigência</th>
+              <th class="p-4">Provento</th>
+              <th class="p-4">Cálculo Taxa Líquida & Exigência</th>
               <th class="p-4">Preço Teto</th>
               <th class="p-4">Margem</th>
               <th class="p-4">Status</th>
@@ -190,14 +251,15 @@
             </tr>
           </thead>
           <tbody id="tabelaFiis" class="divide-y divide-slate-700/50 text-sm">
-            <!-- Gerado via JS -->
+            <!-- Renderizado via JS -->
           </tbody>
         </table>
       </div>
     </section>
+
   </div>
 
-  <!-- MODAL: Editar / Adicionar FII -->
+  <!-- MODAL EDITAR / ADICIONAR -->
   <div id="modalAjuste" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b border-slate-700 pb-3">
@@ -212,15 +274,33 @@
             <input type="text" id="modalTicker" placeholder="EX: HGLG11" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold uppercase focus:outline-none focus:border-cyan-500">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Segmento</label>
-            <input type="text" id="modalSegmento" placeholder="EX: Logístico" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm focus:outline-none focus:border-cyan-500">
+            <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Segmento e Risco</label>
+            <select id="modalSegmento" onchange="aoMudarSegmentoModal()" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs font-semibold focus:outline-none focus:border-cyan-500">
+              <optgroup label="🏢 FIIs de Tijolo (Base IPCA -15% IR)">
+                <option value="Logística e Industrial" data-tipo="tijolo" data-risco="Baixo" data-variacao="+1,50% a +2,00%" data-premio="2.00">🟢 Logística e Industrial (Risco Baixo)</option>
+                <option value="Renda Urbana / Varejo Essencial" data-tipo="tijolo" data-risco="Baixo" data-variacao="+1,50% a +2,50%" data-premio="2.25">🟢 Renda Urbana / Varejo (Risco Baixo)</option>
+                <option value="Shoppings Centers e Varejo" data-tipo="tijolo" data-risco="Médio" data-variacao="+2,00% a +2,50%" data-premio="2.50">🟡 Shoppings Centers (Risco Médio)</option>
+                <option value="Agências Bancárias" data-tipo="tijolo" data-risco="Médio" data-variacao="+2,50% a +3,00%" data-premio="2.75">🟡 Agências Bancárias (Risco Médio)</option>
+                <option value="Lajes Corporativas" data-tipo="tijolo" data-risco="Médio" data-variacao="+2,50% a +3,50%" data-premio="3.00">🟡 Lajes Corporativas (Risco Médio)</option>
+                <option value="Híbrido - Tijolo Multissegmento" data-tipo="tijolo" data-risco="Médio" data-variacao="+2,00% a +3,00%" data-premio="2.50">🟡 Híbrido Tijolo (Risco Médio)</option>
+                <option value="Desenvolvimento Imobiliário" data-tipo="tijolo" data-risco="Alto" data-variacao="+3,50% a +5,00%" data-premio="4.00">🔴 Desenvolvimento (Risco Alto)</option>
+                <option value="Hotéis e Flat Services" data-tipo="tijolo" data-risco="Alto" data-variacao="+3,50% a +5,00%" data-premio="4.00">🔴 Hotéis e Flats (Risco Alto)</option>
+              </optgroup>
+              <optgroup label="📜 FIIs de Papel e Outros (Base Selic -15% IR)">
+                <option value="CRIs - High Grade (Baixo Risco)" data-tipo="papel" data-risco="Baixo" data-variacao="+1,00% a +2,00%" data-premio="1.50">🟢 CRIs High Grade (Risco Baixo)</option>
+                <option value="Fundos de Fundos (FoFs)" data-tipo="papel" data-risco="Médio" data-variacao="+2,00% a +3,00%" data-premio="2.25">🟡 Fundos de Fundos FoFs (Risco Médio)</option>
+                <option value="CRIs - Middle Risk (Médio Risco)" data-tipo="papel" data-risco="Médio" data-variacao="+2,00% a +3,00%" data-premio="2.50">🟡 CRIs Middle Risk (Risco Médio)</option>
+                <option value="Híbrido - Misto / Multi-Estratégia" data-tipo="papel" data-risco="Médio" data-variacao="+2,00% a +3,00%" data-premio="2.25">🟡 Híbrido Misto (Risco Médio)</option>
+                <option value="CRIs - High Yield (Alto Risco)" data-tipo="papel" data-risco="Alto" data-variacao="+3,50% a +5,00%" data-premio="4.00">🔴 CRIs High Yield (Risco Alto)</option>
+              </optgroup>
+            </select>
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Modelo de Valuation</label>
-          <select id="modalTipo" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold focus:outline-none focus:border-cyan-500">
-            <option value="tijolo">Tijolo / Híbrido (Base IPCA+)</option>
+          <select id="modalTipo" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-bold text-xs focus:outline-none focus:border-cyan-500">
+            <option value="tijolo">Tijolo / Híbrido (Base IPCA -15% IR)</option>
             <option value="papel">Papel / CRIs (Base Selic -15% IR)</option>
           </select>
         </div>
@@ -259,7 +339,7 @@
     </div>
   </div>
 
-  <!-- MODAL: Salvar Arquivo -->
+  <!-- MODAL SALVAR -->
   <div id="modalSalvar" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -280,86 +360,139 @@
   </div>
 
   <script>
-    // Carteira Padrão Inicial
     let fiis = [
-      { ticker: 'GGRC11', segmento: 'Logístico', tipo: 'tijolo', cotacao: 9.89, rendimento: 0.10, juro: 6.25, premio: 2.50 },
-      { ticker: 'TVRI11', segmento: 'Agências Bancárias', tipo: 'tijolo', cotacao: 91.36, rendimento: 1.05, juro: 6.25, premio: 3.00 },
-      { ticker: 'GARE11', segmento: 'Híbrido', tipo: 'tijolo', cotacao: 8.17, rendimento: 0.08, juro: 6.25, premio: 2.50 },
-      { ticker: 'RBVA11', segmento: 'Híbrido / Varejo', tipo: 'tijolo', cotacao: 8.96, rendimento: 0.09, juro: 6.25, premio: 2.50 },
-      { ticker: 'VISC11', segmento: 'Shoppings', tipo: 'tijolo', cotacao: 104.89, rendimento: 0.84, juro: 6.25, premio: 2.00 },
-      { ticker: 'TRXF11', segmento: 'Híbrido', tipo: 'tijolo', cotacao: 91.10, rendimento: 1.50, juro: 6.25, premio: 2.50 },
-      { ticker: 'BTLG11', segmento: 'Logístico', tipo: 'tijolo', cotacao: 101.17, rendimento: 0.81, juro: 6.25, premio: 2.00 },
-      { ticker: 'HSML11', segmento: 'Shoppings', tipo: 'tijolo', cotacao: 86.94, rendimento: 0.75, juro: 6.25, premio: 2.50 },
-      { ticker: 'BTHF11', segmento: 'Híbrido', tipo: 'tijolo', cotacao: 8.93, rendimento: 0.10, juro: 6.25, premio: 2.50 },
-      { ticker: 'MFII11', segmento: 'Híbrido / Dev.', tipo: 'tijolo', cotacao: 51.67, rendimento: 0.91, juro: 6.25, premio: 3.50 },
-      { ticker: 'XPML11', segmento: 'Shoppings', tipo: 'tijolo', cotacao: 104.50, rendimento: 0.92, juro: 6.25, premio: 2.00 },
-      { ticker: 'CPTS11', segmento: 'Papel / CRIs', tipo: 'papel', cotacao: 7.46, rendimento: 0.09, juro: 10.50, premio: 2.00 },
-      { ticker: 'VGHF11', segmento: 'Híbrido / Papel', tipo: 'papel', cotacao: 5.86, rendimento: 0.07, juro: 10.50, premio: 2.00 },
-      { ticker: 'BIME11', segmento: 'Híbrido / FoF', tipo: 'papel', cotacao: 4.69, rendimento: 0.06, juro: 10.50, premio: 2.50 }
+      { ticker: 'GGRC11', segmento: 'Logística e Industrial', tipo: 'tijolo', risco: 'Baixo', variacaoRisco: '+1,50% a +2,00%', cotacao: 9.89, rendimento: 0.10, juro: 6.25, premio: 2.00 },
+      { ticker: 'TVRI11', segmento: 'Agências Bancárias', tipo: 'tijolo', risco: 'Médio', variacaoRisco: '+2,50% a +3,00%', cotacao: 91.36, rendimento: 1.05, juro: 6.25, premio: 2.75 },
+      { ticker: 'GARE11', segmento: 'Renda Urbana / Varejo Essencial', tipo: 'tijolo', risco: 'Baixo', variacaoRisco: '+1,50% a +2,50%', cotacao: 8.17, rendimento: 0.08, juro: 6.25, premio: 2.25 },
+      { ticker: 'VISC11', segmento: 'Shoppings Centers e Varejo', tipo: 'tijolo', risco: 'Médio', variacaoRisco: '+2,00% a +2,50%', cotacao: 104.89, rendimento: 0.84, juro: 6.25, premio: 2.50 },
+      { ticker: 'TRXF11', segmento: 'Híbrido - Tijolo Multissegmento', tipo: 'tijolo', risco: 'Médio', variacaoRisco: '+2,00% a +3,00%', cotacao: 91.10, rendimento: 1.50, juro: 6.25, premio: 2.50 },
+      { ticker: 'MFII11', segmento: 'Desenvolvimento Imobiliário', tipo: 'tijolo', risco: 'Alto', variacaoRisco: '+3,50% a +5,00%', cotacao: 51.67, rendimento: 0.91, juro: 6.25, premio: 4.00 },
+      { ticker: 'CPTS11', segmento: 'CRIs - High Grade (Baixo Risco)', tipo: 'papel', risco: 'Baixo', variacaoRisco: '+1,00% a +2,00%', cotacao: 7.46, rendimento: 0.09, juro: 10.50, premio: 1.50 },
+      { ticker: 'VGHF11', segmento: 'Híbrido - Misto / Multi-Estratégia', tipo: 'papel', risco: 'Médio', variacaoRisco: '+2,00% a +3,00%', cotacao: 5.86, rendimento: 0.07, juro: 10.50, premio: 2.25 }
     ];
 
     let ativoEmEdicao = null;
 
-    // Função que retorna a faixa de prêmio de risco recomendada
-    function obterRiscoRecomendado(fii) {
-      const seg = fii.segmento.toLowerCase();
-      
-      if (fii.tipo === 'papel') {
-        if (seg.includes('high yield') || seg.includes('desenvolvimento')) return '+3,50% a +5,00%';
-        if (seg.includes('fof') || seg.includes('médio')) return '+2,00% a +3,00%';
-        return '+1,50% a +2,50%';
+    // TOGGLE PAINEL UNIFICADO DE CONCEITO & FÓRMULAS
+    function togglePainelConceito() {
+      const conteudo = document.getElementById('conteudoConceito');
+      const icone = document.getElementById('iconeConceito');
+      if (conteudo.classList.contains('hidden')) {
+        conteudo.classList.remove('hidden');
+        icone.innerHTML = '<i class="fa-solid fa-chevron-up"></i> <span>Ocultar Painel</span>';
       } else {
-        if (seg.includes('agências') || seg.includes('dev')) return '+3,00% a +4,00%';
-        if (seg.includes('shoppings') || seg.includes('lajes')) return '+2,00% a +2,50%';
-        return '+1,50% a +2,50%';
+        conteudo.classList.add('hidden');
+        icone.innerHTML = '<i class="fa-solid fa-chevron-down"></i> <span>Expandir Painel</span>';
       }
     }
 
+    // TOGGLE PAINEL DIDÁTICO DE RISCOS
     function toggleDidatico() {
       const conteudo = document.getElementById('conteudoDidatico');
       const icone = document.getElementById('iconeDidatico');
-      
       if (conteudo.classList.contains('hidden')) {
         conteudo.classList.remove('hidden');
-        icone.innerHTML = '<i class="fa-solid fa-chevron-up"></i> Ocultar Guia';
+        icone.innerHTML = '<i class="fa-solid fa-chevron-up"></i> <span>Ocultar Guia</span>';
       } else {
         conteudo.classList.add('hidden');
-        icone.innerHTML = '<i class="fa-solid fa-chevron-down"></i> Expandir Guia';
+        icone.innerHTML = '<i class="fa-solid fa-chevron-down"></i> <span>Expandir Guia</span>';
       }
     }
 
-    async function buscarTaxaTesouroIpca() {
-      const statusApi = document.getElementById('statusApi');
-      statusApi.innerText = "Atualizando IPCA+...";
-      statusApi.className = "text-xs text-amber-400 italic";
-
-      const urlTesouro = 'https://www.tesourodireto.com.br/json/treia/lista_titulos.json';
-      const urlProxy = `https://corsproxy.io/?${encodeURIComponent(urlTesouro)}`;
-
-      try {
-        const response = await fetch(urlProxy);
-        if (!response.ok) throw new Error("Erro de conexão");
-
-        const data = await response.json();
-        const titulos = data.response.TrsBndSersTrsBnd;
-
-        const ipcaLongo = titulos.find(t => 
-          t.TrsBnd.nm.includes('Tesouro IPCA+') && !t.TrsBnd.nm.includes('Semestrais')
-        );
-
-        if (ipcaLongo) {
-          const taxa = parseFloat(ipcaLongo.TrsBnd.anlTrdRtn);
-          document.getElementById('taxaIpcaGlobal').value = taxa.toFixed(2);
-          atualizarTodosGlobais();
-          
-          statusApi.innerText = `● Conectado (IPCA+ ${taxa.toFixed(2)}%)`;
-          statusApi.className = "text-xs text-emerald-400 font-semibold";
-        }
-      } catch (error) {
-        console.warn('Falha na API Tesouro:', error);
-        statusApi.innerText = "● Modo Manual (IPCA+)";
-        statusApi.className = "text-xs text-slate-400";
+    function renderizarBadgeRisco(risco, variacao) {
+      const varTexto = variacao || 'Faixa padrão do segmento';
+      let badgeClass = 'bg-amber-950/80 text-amber-400 border-amber-800';
+      let dotColor = 'fa-circle text-amber-400';
+      
+      if (risco === 'Baixo') {
+        badgeClass = 'bg-emerald-950/80 text-emerald-400 border-emerald-800';
+        dotColor = 'fa-circle text-emerald-400';
+      } else if (risco === 'Alto') {
+        badgeClass = 'bg-rose-950/80 text-rose-400 border-rose-800';
+        dotColor = 'fa-circle text-rose-400';
       }
+
+      return `
+        <div class="has-tooltip inline-block cursor-help">
+          <span class="${badgeClass} border px-2.5 py-1 rounded text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition-transform hover:scale-105">
+            <i class="fa-solid ${dotColor} text-[8px]"></i> Risco ${risco}
+          </span>
+          <div class="tooltip-content absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2.5 bg-slate-950 text-slate-200 text-[11px] rounded-lg border border-slate-700 shadow-2xl z-30 text-center pointer-events-none">
+            <div class="font-bold text-cyan-400 mb-0.5">Variação / Prêmio Sugerido</div>
+            <div class="text-slate-300 font-mono">${varTexto}</div>
+            <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-950"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function aoMudarSegmentoModal() {
+      const selectSeg = document.getElementById('modalSegmento');
+      const opt = selectSeg.options[selectSeg.selectedIndex];
+      
+      const tipo = opt.getAttribute('data-tipo');
+      const premioSug = opt.getAttribute('data-premio');
+
+      if (tipo) {
+        document.getElementById('modalTipo').value = tipo;
+        document.getElementById('modalPremio').value = premioSug || 2.50;
+        
+        if (tipo === 'papel') {
+          document.getElementById('modalJuro').value = document.getElementById('taxaCdiGlobal').value;
+        } else {
+          document.getElementById('modalJuro').value = document.getElementById('taxaIpcaGlobal').value;
+        }
+      }
+    }
+
+    function atualizarTaxaBaseTijolo() {
+      const novaTaxa = parseFloat(document.getElementById('taxaIpcaGlobal').value) || 0;
+      document.getElementById('labelIpcaLiq').innerText = `IPCA Líq: ${(novaTaxa * 0.85).toFixed(2)}% (Bruto -15%)`;
+
+      fiis.forEach(fii => {
+        if (fii.tipo === 'tijolo') {
+          fii.juro = novaTaxa;
+        }
+      });
+      renderizarTabela();
+    }
+
+    function atualizarTaxaBasePapel() {
+      const novaTaxa = parseFloat(document.getElementById('taxaCdiGlobal').value) || 0;
+      document.getElementById('labelCdiLiq').innerText = `Selic Líq: ${(novaTaxa * 0.85).toFixed(2)}% (Bruta -15%)`;
+
+      fiis.forEach(fii => {
+        if (fii.tipo === 'papel') {
+          fii.juro = novaTaxa;
+        }
+      });
+      renderizarTabela();
+    }
+
+    function aplicarPremioTijolo() {
+      const premioGlobal = parseFloat(document.getElementById('premioTijoloGlobal').value) || 0;
+
+      fiis.forEach(fii => {
+        if (fii.tipo === 'tijolo') {
+          fii.premio = premioGlobal;
+        }
+      });
+
+      renderizarTabela();
+      alert(`Prêmio de risco de ${premioGlobal.toFixed(2)}% aplicado a todos os FIIs de Tijolo!`);
+    }
+
+    function aplicarPremioPapel() {
+      const premioGlobal = parseFloat(document.getElementById('premioPapelGlobal').value) || 0;
+
+      fiis.forEach(fii => {
+        if (fii.tipo === 'papel') {
+          fii.premio = premioGlobal;
+        }
+      });
+
+      renderizarTabela();
+      alert(`Prêmio de risco de ${premioGlobal.toFixed(2)}% aplicado a todos os FIIs de Papel!`);
     }
 
     function renderizarTabela() {
@@ -369,9 +502,7 @@
 
       fiis.forEach((fii, index) => {
         const proventoAnual = fii.rendimento * 12;
-        
-        // Aplicação do desconto de 15% de IR para Selic/Papel
-        const taxaBaseEfetiva = fii.tipo === 'papel' ? (fii.juro * 0.85) : fii.juro;
+        const taxaBaseEfetiva = fii.juro * 0.85;
         const taxaTotal = taxaBaseEfetiva + fii.premio;
         
         const taxaExigidaTotal = taxaTotal / 100;
@@ -382,24 +513,21 @@
         const statusClass = isDesconto ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20';
         const statusTexto = isDesconto ? 'Comprar' : 'Aguardar';
 
-        const riscoRecomendado = obterRiscoRecomendado(fii);
-
-        // Modelo de exibição para Selic Líquida (sem a sigla CDI)
         const badgeModelo = fii.tipo === 'papel' 
           ? `<div>
-              <span class="text-[11px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800/80 px-2 py-0.5 rounded inline-block">
-                ${taxaTotal.toFixed(2)}% a.a. (Líquido)
+              <span class="text-[11px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800 px-2 py-0.5 rounded inline-block">
+                ${taxaTotal.toFixed(2)}% a.a. (Exigência)
               </span>
               <div class="text-[10px] text-slate-400 font-mono mt-1">
                 Selic Líq. (${taxaBaseEfetiva.toFixed(2)}%) + Prêmio (${fii.premio.toFixed(2)}%)
               </div>
              </div>`
           : `<div>
-              <span class="text-[11px] font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800/80 px-2 py-0.5 rounded inline-block">
-                IPCA + ${taxaTotal.toFixed(2)}%
+              <span class="text-[11px] font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800 px-2 py-0.5 rounded inline-block">
+                ${taxaTotal.toFixed(2)}% a.a. (Exigência)
               </span>
               <div class="text-[10px] text-slate-400 font-mono mt-1">
-                Base: ${fii.juro.toFixed(2)}% + Prêmio: ${fii.premio.toFixed(2)}%
+                IPCA Líq. (${taxaBaseEfetiva.toFixed(2)}%) + Prêmio (${fii.premio.toFixed(2)}%)
               </div>
              </div>`;
 
@@ -408,10 +536,8 @@
             <td class="p-4">
               <div class="font-extrabold text-cyan-300 text-base">${fii.ticker}</div>
               <div class="text-xs text-slate-300 font-medium">${fii.segmento}</div>
-              <div class="text-[11px] text-emerald-400/90 font-mono mt-0.5 flex items-center gap-1">
-                <i class="fa-solid fa-shield text-[9px]"></i> Risco Ideal: ${riscoRecomendado}
-              </div>
             </td>
+            <td class="p-4">${renderizarBadgeRisco(fii.risco, fii.variacaoRisco)}</td>
             <td class="p-4 font-semibold text-slate-200">R$ ${fii.cotacao.toFixed(2)}</td>
             <td class="p-4 text-emerald-400 font-semibold">R$ ${fii.rendimento.toFixed(2)}/mês</td>
             <td class="p-4">${badgeModelo}</td>
@@ -426,12 +552,8 @@
             </td>
             <td class="p-4 text-center">
               <div class="flex items-center justify-center gap-3">
-                <button onclick="abrirModalAjuste(${index})" title="Editar FII" class="text-slate-400 hover:text-cyan-400 transition">
-                  <i class="fa-solid fa-sliders"></i>
-                </button>
-                <button onclick="excluirFii(${index})" title="Excluir FII" class="text-slate-400 hover:text-rose-400 transition">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
+                <button onclick="abrirModalAjuste(${index})" title="Editar" class="text-slate-400 hover:text-cyan-400 transition"><i class="fa-solid fa-sliders"></i></button>
+                <button onclick="excluirFii(${index})" title="Excluir" class="text-slate-400 hover:text-rose-400 transition"><i class="fa-solid fa-trash-can"></i></button>
               </div>
             </td>
           </tr>
@@ -439,32 +561,6 @@
       });
     }
 
-    function atualizarTodosGlobais() {
-      const ipcaGlobal = parseFloat(document.getElementById('taxaIpcaGlobal').value) || 0;
-      const premioTijolo = parseFloat(document.getElementById('premioTijoloGlobal').value) || 0;
-      const cdiGlobal = parseFloat(document.getElementById('taxaCdiGlobal').value) || 0;
-      const premioPapel = parseFloat(document.getElementById('premioPapelGlobal').value) || 0;
-
-      const selicLiquida = cdiGlobal * 0.85;
-      const totalPapelLiquido = selicLiquida + premioPapel;
-
-      document.getElementById('taxaTotalTijolo').innerText = `IPCA + ${(ipcaGlobal + premioTijolo).toFixed(2)}%`;
-      document.getElementById('taxaTotalPapel').innerText = `${selicLiquida.toFixed(2)}% + ${premioPapel.toFixed(2)}% = ${totalPapelLiquido.toFixed(2)}%`;
-
-      fiis.forEach(fii => {
-        if (fii.tipo === 'papel') {
-          fii.juro = cdiGlobal;
-          fii.premio = premioPapel;
-        } else {
-          fii.juro = ipcaGlobal;
-          fii.premio = premioTijolo;
-        }
-      });
-
-      renderizarTabela();
-    }
-
-    // Modal de Edição / Adição
     function abrirModalAjuste(index) {
       ativoEmEdicao = index;
       const fii = fiis[index];
@@ -485,15 +581,14 @@
       ativoEmEdicao = null;
       document.getElementById('modalTitulo').innerText = "Adicionar Novo FII";
       document.getElementById('modalTicker').value = "";
-      document.getElementById('modalSegmento').value = "";
+      document.getElementById('modalSegmento').value = "Logística e Industrial";
       document.getElementById('modalTipo').value = "tijolo";
       document.getElementById('modalCotacao').value = "";
       document.getElementById('modalRendimento').value = "";
       
       const ipca = parseFloat(document.getElementById('taxaIpcaGlobal').value) || 6.25;
-      const premio = parseFloat(document.getElementById('premioTijoloGlobal').value) || 2.50;
       document.getElementById('modalJuro').value = ipca;
-      document.getElementById('modalPremio').value = premio;
+      document.getElementById('modalPremio').value = 2.00;
 
       document.getElementById('modalAjuste').classList.remove('hidden');
     }
@@ -505,7 +600,13 @@
 
     function salvarAjusteIndividual() {
       const ticker = document.getElementById('modalTicker').value.trim().toUpperCase();
-      const segmento = document.getElementById('modalSegmento').value.trim() || 'Geral';
+      const selectSeg = document.getElementById('modalSegmento');
+      const segmento = selectSeg.value;
+      const opt = selectSeg.options[selectSeg.selectedIndex];
+      
+      const risco = opt.getAttribute('data-risco') || 'Médio';
+      const variacaoRisco = opt.getAttribute('data-variacao') || '+2,00% a +3,00%';
+
       const tipo = document.getElementById('modalTipo').value;
       const cotacao = parseFloat(document.getElementById('modalCotacao').value) || 0;
       const rendimento = parseFloat(document.getElementById('modalRendimento').value) || 0;
@@ -517,7 +618,7 @@
         return;
       }
 
-      const dadosFii = { ticker, segmento, tipo, cotacao, rendimento, juro, premio };
+      const dadosFii = { ticker, segmento, tipo, risco, variacaoRisco, cotacao, rendimento, juro, premio };
 
       if (ativoEmEdicao !== null) {
         fiis[ativoEmEdicao] = dadosFii;
@@ -530,21 +631,14 @@
     }
 
     function excluirFii(index) {
-      const fii = fiis[index];
-      if (confirm(`Tem certeza que deseja remover o fundo ${fii.ticker} da carteira?`)) {
+      if (confirm(`Remover fundo ${fiis[index].ticker}?`)) {
         fiis.splice(index, 1);
         renderizarTabela();
       }
     }
 
-    // Lógica de Salvar / Carregar Arquivos JSON
-    function abrirModalSalvar() {
-      document.getElementById('modalSalvar').classList.remove('hidden');
-    }
-
-    function fecharModalSalvar() {
-      document.getElementById('modalSalvar').classList.add('hidden');
-    }
+    function abrirModalSalvar() { document.getElementById('modalSalvar').classList.remove('hidden'); }
+    function fecharModalSalvar() { document.getElementById('modalSalvar').classList.add('hidden'); }
 
     function executarDownloadArquivo() {
       let nomeArq = document.getElementById('nomeArquivoSalvar').value.trim() || "carteira-fii";
@@ -569,7 +663,6 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
       fecharModalSalvar();
     }
 
@@ -592,20 +685,16 @@
             fiis = data.fiis;
             renderizarTabela();
             alert("Carteira carregada com sucesso!");
-          } else {
-            alert("Estrutura do arquivo inválida.");
           }
         } catch (err) {
-          alert("Erro ao ler o arquivo JSON selecionado.");
+          alert("Erro ao ler o arquivo JSON.");
         }
       };
       reader.readAsText(file);
       event.target.value = '';
     }
 
-    // Inicialização
     renderizarTabela();
-    buscarTaxaTesouroIpca();
   </script>
 </body>
 </html>
