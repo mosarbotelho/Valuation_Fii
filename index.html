@@ -17,6 +17,13 @@
       visibility: visible;
       opacity: 1;
     }
+    @keyframes highlightGreen {
+      0% { background-color: rgba(16, 185, 129, 0.3); }
+      100% { background-color: transparent; }
+    }
+    .fii-updated {
+      animation: highlightGreen 2s ease-out;
+    }
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
@@ -408,7 +415,6 @@
 
     let fiis = [];
     let ativoEmEdicao = null;
-    const TOKEN_BRAPI = "gMSJqXa15Gq86sfF57JEoo"; 
 
     // --- FUNÇÕES DE ARMAZENAMENTO LOCAL (LOCALSTORAGE) ---
     function salvarEstadoLocal() {
@@ -446,6 +452,8 @@
       fiis = [...fiisPadrao];
     }
 
+    const sleep = ms => new Promise(res => setTimeout(res, ms));
+
     async function buscarCotacoesWeb() {
       if (fiis.length === 0) {
         alert("Nenhum FII cadastrado para buscar cotações.");
@@ -455,71 +463,63 @@
       const btn = document.getElementById('btnAtualizarCotacoes');
       const textoOriginal = btn.innerHTML;
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Buscando...</span>`;
 
-      try {
-        const symbolsStr = fiis.map(f => f.ticker).join(',');
-        const apiUrl = `https://brapi.dev/api/v2/fii/indicators?symbols=${encodeURIComponent(symbolsStr)}&token=${encodeURIComponent(TOKEN_BRAPI)}`;
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
-        
-        const res = await fetch(proxyUrl);
-        
-        if (res.status === 403) {
-          console.warn("Limite da Brapi atingido. Ativando servidor secundário...");
-          await buscarCotacoesFallback(textoOriginal);
-          return;
-        }
+      // Reseta os marcadores visuais de atualizado
+      fiis.forEach(f => f.recemAtualizado = false);
+      renderizarTabela();
 
-        if (!res.ok) throw new Error(`Erro na API (Status HTTP: ${res.status})`);
-
-        const data = await res.json();
-
-        if (data && data.fiis && Array.isArray(data.fiis)) {
-          let atualizados = 0;
-          data.fiis.forEach(item => {
-            const fii = fiis.find(f => f.ticker === item.symbol);
-            if (fii && item.price) {
-              fii.cotacao = parseFloat(item.price);
-              atualizados++;
-            }
-          });
-          renderizarTabela();
-          alert(`Sucesso: Cotações de ${atualizados} FIIs atualizadas!`);
-        } else {
-          throw new Error("Formato de resposta inesperado.");
-        }
-      } catch (err) {
-        console.error("Erro na requisição principal, acionando fallback...", err);
-        await buscarCotacoesFallback(textoOriginal);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = textoOriginal;
-      }
-    }
-
-    async function buscarCotacoesFallback(textoOriginalBtn) {
       let atualizados = 0;
-      for (let fii of fiis) {
+      const total = fiis.length;
+      const chunkSize = 5; // Envia em pacotes de 5 FIIs
+
+      // Função auxiliar para buscar um único FII
+      const buscarUmFii = async (fii) => {
         try {
           const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${fii.ticker}.SA?interval=1d`;
-          const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`;
+          const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
+          
           const res = await fetch(proxyUrl);
           if (res.ok) {
-            const data = await res.json();
+            const dataJson = await res.json();
+            const data = JSON.parse(dataJson.contents);
             const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+
             if (price) {
               fii.cotacao = parseFloat(price);
-              atualizados++;
+              fii.recemAtualizado = true;
+              return true;
             }
           }
         } catch (e) {
-          console.warn(`Erro no fallback para ${fii.ticker}`);
+          console.warn(`Erro ao buscar cotação de ${fii.ticker}`, e);
+        }
+        return false;
+      };
+
+      // Processa a lista em lotes de 5
+      for (let i = 0; i < total; i += chunkSize) {
+        const lote = fiis.slice(i, i + chunkSize);
+        const progresso = Math.min(i + chunkSize, total);
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Buscando (${progresso}/${total})...</span>`;
+
+        // Dispara as 5 requisições do pacote em paralelo
+        const resultados = await Promise.all(lote.map(fii => buscarUmFii(fii)));
+        
+        // Contabiliza os sucessos do pacote
+        atualizados += resultados.filter(sucesso => sucesso).length;
+        renderizarTabela();
+
+        // Pausa reduzida para 150ms entre pacotes
+        if (i + chunkSize < total) {
+          await sleep(150);
         }
       }
 
-      renderizarTabela();
+      btn.disabled = false;
+      btn.innerHTML = textoOriginal;
+
       if (atualizados > 0) {
-        alert(`Cotações de ${atualizados} FIIs atualizadas via Servidor Secundário (Yahoo Finance)!`);
+        alert(`Cotações de ${atualizados} de ${total} FIIs atualizadas com sucesso via Yahoo Finance!`);
       } else {
         alert("Não foi possível atualizar as cotações no momento.");
       }
@@ -657,14 +657,22 @@
               </div>
              </div>`;
 
+        // Marcador visual de cotação recém-encontrada
+        const iconeSinalizacao = fii.recemAtualizado 
+          ? `<i class="fa-solid fa-circle-check text-emerald-400 text-xs ml-1" title="Cotação atualizada recentemente"></i>` 
+          : '';
+        const rowAnimationClass = fii.recemAtualizado ? 'fii-updated' : '';
+
         tbody.innerHTML += `
-          <tr class="hover:bg-slate-700/40 transition">
+          <tr class="hover:bg-slate-700/40 transition ${rowAnimationClass}">
             <td class="p-4">
               <div class="font-extrabold text-cyan-300 text-base">${fii.ticker}</div>
               <div class="text-xs text-slate-300 font-medium">${fii.segmento}</div>
             </td>
             <td class="p-4">${renderizarBadgeRisco(fii.risco, fii.variacaoRisco)}</td>
-            <td class="p-4 font-semibold text-slate-200">R$ ${fii.cotacao.toFixed(2)}</td>
+            <td class="p-4 font-semibold text-slate-200">
+              R$ ${fii.cotacao.toFixed(2)} ${iconeSinalizacao}
+            </td>
             <td class="p-4 text-emerald-400 font-semibold">R$ ${fii.rendimento.toFixed(2)}/mês</td>
             <td class="p-4">${badgeModelo}</td>
             <td class="p-4 font-bold text-white text-base">R$ ${precoTeto.toFixed(2)}</td>
